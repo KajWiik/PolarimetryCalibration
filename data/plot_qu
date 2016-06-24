@@ -1,0 +1,6 @@
+julia> scatter(pa,q,label="Q",xlabel="PA")
+
+julia> scatter!(pa,u,label="U")
+
+julia> savefig("3c286-QU.pdf")
+

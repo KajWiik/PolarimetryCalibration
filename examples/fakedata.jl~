@@ -1,0 +1,3 @@
+using PolarimetryCalibration
+
+stokes = [müller_rec(General())*müller_sky(PAaz*π/180)*lin_pol_source(pa = 15*π/180) for PAaz = 0:0.2:180] 
