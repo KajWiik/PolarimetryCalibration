@@ -1,0 +1,9 @@
+using JLD
+dataname = readline()
+
+i = readdlm("i")
+q = readdlm("q")
+u = readdlm("u")
+v = readdlm("v")
+
+save(dataname*".jld", "i", i, "q", q, "u", u, "v", v)

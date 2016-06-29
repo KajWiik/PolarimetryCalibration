@@ -1,4 +1,5 @@
-using PolarimetryCalibration, Plots, LaTeXStrings, JLD, NLopt, Debug
+#using PolarimetryCalibration, Plots, LaTeXStrings, JLD, NLopt, Debug
+using PolarimetryCalibration, PyPlot, LaTeXStrings, JLD, NLopt, Debug
 
 cal = load("../data/3C286_20160229.jld")
 tovector(a) = reshape(a, length(a))
@@ -8,7 +9,7 @@ pa = tovector(cal["pa"])
 r = abs(pa) .< 55.0
 pa = pa[r]
 I = tovector(cal["i"][r])
-Q = tovector(cal["q"][r])
+Q = tovector(cal["q"][r])/2
 U = tovector(cal["u"][r])
 V = tovector(cal["v"][r])
 
@@ -16,20 +17,19 @@ PArange = minimum(pa):1.0:maximum(pa)
 
 function cost_circ(x, grad)
     sumsq = 0.0
-
+#    model = Array{Float64,2}()
     for ind in 1:length(pa)
+ #       @bp
         model = müller_rec(ϵ = x[1], ϕ = x[2], ΔG = x[3], ψ = x[4],
                            α = deg2rad(45.0))* # Circular feed
 #                           α = x[7])* # Circular feed
         müller_sky(pa[ind])*
 #        lin_pol_source(flux = x[5], p = x[6], pa = deg2rad(34.0))
         lin_pol_source(flux = x[5], p = x[6], pa = x[7])
-#        lin_pol_source(flux = 0.022, p = x[6], pa = x[7])
-#        sumsq += (model[1] - I[ind])^2 +
         sumsq += (model[1] - I[ind])^2 +
-        1/x[6]*(model[2] - Q[ind])^2 +
-        1/x[6]*(model[3] - U[ind])^2 +
-        (model[4] - V[ind])^2
+        (model[2] - V[ind])^2 +
+        5800*(model[3] - U[ind])^2 +
+        5800*(model[4] + Q[ind])^2
 #        sumsq += (model[3] - U[ind])^2 + (model[4] + Q[ind])^2
     end
 
@@ -44,16 +44,7 @@ function cost_circ(x, grad)
                                      p = x[6],
                                      pa = x[7]))[i] 
     for PAaz in PArange, i in 1:4]
-    p1 = plot(PArange, pmodel[:,1], title = "I")
-    scatter!(p1, pa, I, legend = :none, markersize = 3)
-    p2 = plot(PArange, pmodel[:,2],title = "Q")
-    scatter!(p2, pa, Q, legend = :none, markersize = 3)
-    p3 = plot(PArange, pmodel[:,3],title = "U")
-    scatter!(p3, pa, U, legend = :none, markersize = 3)
-    p4 = plot(PArange, pmodel[:,4],title = "V")
-    scatter!(p4, pa, V, legend = :none, markersize = 3)
-    p = plot(p1, p2, p3, p4)
-    display(p)
+    plot(PArange, pmodel[:,3], "r", pa, U, "ro")
     @show sumsq, x
     return sumsq
 end
@@ -63,18 +54,16 @@ opt = Opt(:LN_COBYLA, 7)
 ftol_rel!(opt, 0.000001)
 #ftol_abs!(opt, 0.0004)
 
-initial_step!(opt, [0.01, 0.01, 0.01, 0.01, 0.001, 0.05, 0.01])
-#initial_step!(opt, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-lower_bounds!(opt, [-pi, -pi, -10, -pi, 0.01, 0.01, -2pi])
-upper_bounds!(opt, [pi,   pi,  10,  pi, 0.05, 1.0,   2pi])
+#initial_step!(opt, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+initial_step!(opt, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+lower_bounds!(opt, [-pi, -pi, -10, -pi, 0.0, 0.01, -pi])
+upper_bounds!(opt, [pi, pi, 10, pi, 10.0, 10.0, pi])
 # initial_step!(opt, [0.1, 0.1, 0.1, 0.1, 0.1, 0.01])
 # lower_bounds!(opt, [-pi, -pi, -10, -pi, 0.0, 0.01])
 # upper_bounds!(opt, [pi, pi, 10, pi, 10.0, 1.0])
 
 min_objective!(opt, (x, grad) -> cost_circ(x, grad)) #
-#[-0.0024250372357195495,0.003151796261676011,-0.002372104102021719,0.11248945567718922,0.06121446041165875,0.01,-1.1219476970807971]
-#minf, fit_param, ret = optimize!(opt, [0.0, 0.0, 0.0, 0.0, 0.1, 0.03, deg2rad(-64.0)])
-minf, fit_param, ret = optimize!(opt, [-0.002, 0.003, -0.002, 0.11, 0.0225, 0.016, deg2rad(110.0)])
+minf, fit_param, ret = optimize!(opt, [0.0, 0.0, 0.0, 0.0, 0.1, 0.03, deg2rad(-70)])
 #minf, fit_param, ret = optimize!(opt, [0.0, 0.0, 0.0, 0.0, 0.1, 0.03])
 
 model = Float64[(müller_rec(ϵ = fit_param[1],

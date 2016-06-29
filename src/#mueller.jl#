@@ -1,14 +1,15 @@
 type Linear end
 type Circular end
 type General end
+type Permuted end
 
-# function müller_rec(; ϵ::Float64 = 0.0, ϕ::Float64 = 0.0, ΔG::Float64 = 0.0, α::Float64 = 45.0*π/180, ψ::Float64 = 0.0)
-#     return [1.0         (-2ϵ*sin(ϕ)*sin(2α) + ΔG/2*cos(2α)) 2ϵ*cos(ϕ) (2ϵ*sin(ϕ)*cos(2α) + ΔG/2*sin(2α))
-#             ΔG/2                     cos(2α)                   0.0                  sin(2α)
-#             2ϵ*cos(ϕ + ψ)          sin(2α)*sin(ψ)             cos(ψ)            -cos(2α)*sin(ψ)
-#             2ϵ*sin(ϕ + ψ)         -sin(2α)*cos(ψ)             sin(ψ)             cos(2α)*cos(ψ)]
-# end
 function müller_rec(; ϵ::Float64 = 0.0, ϕ::Float64 = 0.0, ΔG::Float64 = 0.0, α::Float64 = 45.0*π/180, ψ::Float64 = 0.0)
+    return [1.0         (-2ϵ*sin(ϕ)*sin(2α) + ΔG/2*cos(2α)) 2ϵ*cos(ϕ) (2ϵ*sin(ϕ)*cos(2α) + ΔG/2*sin(2α))
+            ΔG/2                     cos(2α)                   0.0                  sin(2α)
+            2ϵ*cos(ϕ + ψ)          sin(2α)*sin(ψ)             cos(ψ)            -cos(2α)*sin(ψ)
+            2ϵ*sin(ϕ + ψ)         -sin(2α)*cos(ψ)             sin(ψ)             cos(2α)*cos(ψ)]
+end
+function müller_rec(::Permuted; ϵ::Float64 = 0.0, ϕ::Float64 = 0.0, ΔG::Float64 = 0.0, α::Float64 = 45.0*π/180, ψ::Float64 = 0.0)
     return [1.0         (-2ϵ*sin(ϕ)*sin(2α) + ΔG/2*cos(2α)) 2ϵ*cos(ϕ) (2ϵ*sin(ϕ)*cos(2α) + ΔG/2*sin(2α))
             -2ϵ*sin(ϕ + ψ)         sin(2α)*cos(ψ)             -sin(ψ)             -cos(2α)*cos(ψ)
             2ϵ*cos(ϕ + ψ)          sin(2α)*sin(ψ)             cos(ψ)            -cos(2α)*sin(ψ)
